@@ -20,7 +20,6 @@
 #include "repeated.h"
 
 #define MY_DEVICE "repeated"
-#define SEEK_NOT_FOUND -1
 
 MODULE_AUTHOR("Anonymous");
 MODULE_LICENSE("GPL");
@@ -41,13 +40,12 @@ struct MyData
 {
     char *string;
     int maxSize;
-    struct list_head seeksListHead;
+    struct list_head minorsListHead;
 } myData;
 
 struct SeeksListNode
 {
     unsigned int minorNumber;
-    struct file *filp; // TODO - do we need to store the filp or just the seek position?
     list_t ptr;
 };
 
@@ -65,7 +63,7 @@ int init_module(void)
 
     myData.string = NULL;
     myData.maxSize = 0;
-    INIT_LIST_HEAD(&myData.seeksListHead);
+    INIT_LIST_HEAD(&myData.minorsListHead);
     return 0;
 }
 
@@ -78,7 +76,7 @@ void cleanup_module(void)
 
     list_t *currentSeekNodePtr;
     struct SeeksListNode *currentSeekNode;
-    list_for_each(currentSeekNodePtr, &(myData.seeksListHead))
+    list_for_each(currentSeekNodePtr, &(myData.minorsListHead))
     {
         currentSeekNode = list_entry(currentSeekNodePtr, struct SeeksListNode, ptr);
         list_del(currentSeekNodePtr);
@@ -92,27 +90,17 @@ int my_open(struct inode *inode, struct file *filp) // TODO - is the filp initia
 {
     // handle open
     unsigned int minorNumber = MINOR(inode->i_rdev);
-    unsigned int seek = GetSeek(&(myData.seeksListHead), minorNumber);
-    if(seek == SEEK_NOT_FOUND)
+    unsigned int *minorPtr = IsMinorExist(&(myData.minorsListHead), minorNumber);
+    if (minorPtr == NULL) // TODO - should we reset seek to 0 if it's already open?
     {
         struct SeeksListNode *newSeekNode = kmalloc(sizeof(struct SeeksListNode), GFP_KERNEL);
         newSeekNode->minorNumber = minorNumber;
-        newSeekNode->filp->f_pos = 0;
-        list_add_tail(&(newSeekNode->ptr), &(myData.seeksListHead));
+        list_add_tail(&(newSeekNode->ptr), &(myData.minorsListHead));
+        filp->private_data = &(newSeekNode->minorNumber);
     }
-    else // TODO - should we reset seek to 0 if it's already open?
+    else 
     {
-        struct SeeksListNode *currentSeekNode;
-        list_t *currentSeekNodePtr;
-        list_for_each(currentSeekNodePtr, &(myData.seeksListHead))
-        {
-            currentSeekNode = list_entry(currentSeekNodePtr, struct SeeksListNode, ptr);
-            if(currentSeekNode->minorNumber == minorNumber)
-            {
-                currentSeekNode->filp->f_pos = 0;
-                break;
-            }
-        }
+        filp->private_data = minorPtr;
     }
 
     return 0;
@@ -125,7 +113,7 @@ int my_release(struct inode *inode, struct file *filp) // TODO - should we close
     unsigned int minorNumber = MINOR(inode->i_rdev);
     list_t *currentSeekNodePtr;
     struct SeeksListNode *currentSeekNode;
-    list_for_each(currentSeekNodePtr, &(myData.seeksListHead))
+    list_for_each(currentSeekNodePtr, &(myData.minorsListHead))
     {
         currentSeekNode = list_entry(currentSeekNodePtr, struct SeeksListNode, ptr);
         if(currentSeekNode->minorNumber == minorNumber)
@@ -135,6 +123,7 @@ int my_release(struct inode *inode, struct file *filp) // TODO - should we close
             break;
         }
     }
+    filp->private_data = NULL;
     return 0;
 }
 
@@ -143,11 +132,15 @@ ssize_t my_write(struct file *filp, const char *buf, size_t count, loff_t *f_pos
     //
     // Do write operation.
     // Return number of bytes written.
+    if(!IsMinorExist(&(myData.minorsListHead), *(unsigned int*)(filp->private_data)) == NULL)
+    {
+        return -EBADF; // TODO - is this the correct error?
+    }
     myData.maxSize += count;
     return 0; 
 }
 
-ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TODO - why we need filp and buf?, should we use the f_pos or the one in our struct?
+ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TODO - why we need filp?, should we use the f_pos or flip->f_pos?
 {
     //
     // Do read operation.
@@ -157,15 +150,19 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
         return -EFAULT;
     }
 
+    if(!IsMinorExist(&(myData.minorsListHead), *(unsigned int*)(filp->private_data)) == NULL)
+    {
+        return -EBADF; // TODO - is this the correct error?
+    }
+
     int copyToUserReturnValue = 0;
-    unsigned int currentFailedLngthCopied = 0;
     unsigned int totalLengthCopied = 0;
     unsigned int currentLengthCopied = 0;
     unsigned int modPosition = *f_pos % strlen(myData.string);
     // read the string in a loop until we reach the end of the string or the end of the buffer
     while(*f_pos < myData.maxSize)
     {
-        currentLengthCopied = strlen(myData.string) - modPosition < count - totalLengthCopied ? strlen(myData.string) - modPosition : count - totalLengthCopied;
+        currentLengthCopied = ((strlen(myData.string) - modPosition) < (count - totalLengthCopied)) ? (strlen(myData.string) - modPosition) : (count - totalLengthCopied);
         copyToUserReturnValue = copy_to_user(buf + totalLengthCopied, myData.string + modPosition, currentLengthCopied);
         if(copyToUserReturnValue != 0)
         {
@@ -185,6 +182,12 @@ loff_t my_llseek(struct file *filp, loff_t a, int num) // TODO - why we need fil
     //
     // Do lseek operation.
     // Return new position.
+
+    if(!IsMinorExist(&(myData.minorsListHead), *(unsigned int*)(filp->private_data)) == NULL)
+    {
+        return -EBADF; // TODO - is this the correct error?
+    }
+
     loff_t newSeekPosition = a + num;
     if(newSeekPosition < 0)
     {
@@ -200,6 +203,11 @@ loff_t my_llseek(struct file *filp, loff_t a, int num) // TODO - why we need fil
 
 int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg) // TODO - why we need filp and inode?
 {
+    if(!IsMinorExist(&(myData.minorsListHead), *(unsigned int*)(filp->private_data)) == NULL)
+    {
+        return -EBADF; // TODO - is this the correct error?
+    }
+
     switch(cmd)
     {
     case SET_STRING:
@@ -218,15 +226,15 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     return 0;
 }
 
-unsigned int GetSeek(struct list_head* secretsList, unsigned int minorNumber)
+unsigned int *IsMinorExist(struct list_head* minorsListHead, unsigned int minorNumber)
 {
     list_t *currentSeekNodePtr;
     struct SeeksListNode *currentSeekNode;
-    list_for_each(currentSeekNodePtr, secretsList)
+    list_for_each(currentSeekNodePtr, minorsListHead)
     {
         currentSeekNode = list_entry(currentSeekNodePtr, struct SeeksListNode, ptr);
         if(currentSeekNode->minorNumber == minorNumber)
-            return currentSeekNode->filp->f_pos;
+            return &(currentSeekNode->minorNumber);
     }
-    return SEEK_NOT_FOUND;
+    return NULL;
 }
