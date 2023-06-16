@@ -28,7 +28,7 @@ MODULE_LICENSE("GPL");
 /* globals */
 int my_major = 0; /* will hold the major # of my device driver */
 
-struct file_operations my_fops = {
+struct file_operations my_fops = { // TODO - do we need more functions?
     .open = my_open,
     .release = my_release,
     .write = my_write,
@@ -47,7 +47,7 @@ struct MyData
 struct SeeksListNode
 {
     unsigned int minorNumber;
-    struct file *filp;
+    struct file *filp; // TODO - do we need to store the filp or just the seek position?
     list_t ptr;
 };
 
