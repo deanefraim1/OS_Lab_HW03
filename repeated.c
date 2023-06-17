@@ -134,7 +134,7 @@ ssize_t my_write(struct file *filp, const char *buf, size_t count, loff_t *f_pos
     // Return number of bytes written.
     if(!IsMinorExist(&(myData.minorsListHead), *(unsigned int*)(filp->private_data)) == NULL)
     {
-        return -EBADF; // TODO - is this the correct error?
+        return -EFAULT; // TODO - is this the correct error?
     }
     myData.maxSize += count;
     return 0; 
@@ -152,7 +152,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
 
     if(!IsMinorExist(&(myData.minorsListHead), *(unsigned int*)(filp->private_data)) == NULL)
     {
-        return -EBADF; // TODO - is this the correct error?
+        return -EFAULT; // TODO - is this the correct error?
     }
 
     int copyToUserReturnValue = 0;
@@ -210,17 +210,17 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
 
     switch(cmd)
     {
-    case SET_STRING:
-        copy_from_user(myData.string, (char*)arg, strlen((char*)arg)); // TODO - how does it know the string?
-	break;
+        case SET_STRING:
+            copy_from_user(myData.string, (char*)arg, strlen((char*)arg)); // TODO - how does it know the string?
+        break;
 
-    case RESET:
-        myData.maxSize = 0;
-        myData.string = NULL;
-	break;
+        case RESET:
+            myData.maxSize = 0;
+            myData.string = NULL;
+        break;
 
-    default:
-	    return -ENOTTY;
+        default:
+            return -ENOTTY;
     }
 
     return 0;
