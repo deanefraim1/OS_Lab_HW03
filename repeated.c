@@ -191,7 +191,7 @@ loff_t my_llseek(struct file *filp, loff_t a, int num) // TODO - what is the a a
         return -EBADF; // TODO - is this the correct error?
     }
 
-    loff_t newSeekPosition = filp->f_pos + num;
+    loff_t newSeekPosition = filp->f_pos + a;
     if(newSeekPosition < 0)
     {
         newSeekPosition = 0;
@@ -215,7 +215,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     switch(cmd)
     {
         case SET_STRING:
-            copy_from_user(minorsListNodePtr->string, (char*)arg, strlen((char*)arg)); // TODO - how does it know the string?
+            copy_from_user(minorsListNodePtr->string, (char*)arg, strlen_user((char*)arg)); // TODO - how does it know the string?
         break;
 
         case RESET:
