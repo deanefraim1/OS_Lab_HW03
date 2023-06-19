@@ -91,7 +91,7 @@ int my_open(struct inode *inode, struct file *filp) // TODO - is the filp initia
     if (minorsListNodePtr == NULL)
     {
         struct MinorsListNode *newMinorsListNode = kmalloc(sizeof(struct MinorsListNode), GFP_KERNEL);
-        newMinorsListNode->minorNumber = minorsListNodePtr->minorNumber;
+        newMinorsListNode->minorNumber = MINOR(inode->i_rdev);
         list_add_tail(&(newMinorsListNode->ptr), &(myData.minorsListHead));
         newMinorsListNode->string = NULL;
         newMinorsListNode->maxSize = 0;
@@ -215,7 +215,12 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     switch(cmd)
     {
         case SET_STRING:
-            copy_from_user(minorsListNodePtr->string, (char*)arg, strlen_user((char*)arg)); // TODO - how does it know the string?
+            long stringLength = strlen_user((char*)arg);
+            if(stringLength == 0)
+            {
+                return -EINVAL; // TODO - is this the correct error?
+            }
+            copy_from_user(minorsListNodePtr->string, (char*)arg, stringLength); // TODO - how does it know the string?
         break;
 
         case RESET:
