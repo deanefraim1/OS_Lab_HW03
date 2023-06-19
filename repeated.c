@@ -46,7 +46,6 @@ struct MinorsListNode
     unsigned int minorNumber;
     char *string;
     int maxSize;
-    int numberOfThreadsUsing;
     list_t ptr;
 };
 
@@ -95,13 +94,11 @@ int my_open(struct inode *inode, struct file *filp) // TODO - is the filp initia
         list_add_tail(&(newMinorsListNode->ptr), &(myData.minorsListHead));
         newMinorsListNode->string = NULL;
         newMinorsListNode->maxSize = 0;
-        newMinorsListNode->numberOfThreadsUsing = 1;
         filp->private_data = newMinorsListNode;
         filp->f_pos = 0;
     }
     else 
     {
-        minorsListNodePtr->numberOfThreadsUsing++;
         filp->private_data = minorsListNodePtr;
         filp->f_pos = 0;
     }
@@ -113,19 +110,6 @@ int my_open(struct inode *inode, struct file *filp) // TODO - is the filp initia
 int my_release(struct inode *inode, struct file *filp)
 {
     // handle file closing
-    struct MinorsListNode *minorsListNodePtr = GetMinorListNodePtr(filp);
-    if (minorsListNodePtr == NULL)
-    {
-        return -EFAULT; // TODO - is this the correct error?
-    }
-    if(minorsListNodePtr->numberOfThreadsUsing > 1)
-    {
-        minorsListNodePtr->numberOfThreadsUsing--;
-        return 0; // TODO - should we return 0?
-    }
-    kfree(minorsListNodePtr->string);
-    list_del(&(minorsListNodePtr->ptr));
-    kfree(minorsListNodePtr);
     return 0; // TODO - should we return 0?
 }
 
