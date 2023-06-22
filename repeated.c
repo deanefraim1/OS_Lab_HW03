@@ -49,6 +49,8 @@ struct MinorsListNode
     list_t ptr;
 };
 
+struct MinorsListNode *GetMinorListNodePtr(struct file *filp);
+
 int init_module(void)
 {
     // This function is called when inserting the module using insmod
