@@ -54,7 +54,7 @@ struct MinorsListNode *GetMinorListNodePtr(struct file *filp);
 int init_module(void)
 {
     // This function is called when inserting the module using insmod
-
+    printk("Starting init_module\n");
     my_major = register_chrdev(my_major, MY_DEVICE, &my_fops);
 
     if (my_major < 0)
@@ -70,7 +70,7 @@ int init_module(void)
 void cleanup_module(void)
 {
     // This function is called when removing the module using rmmod
-
+    printk("Starting cleanup_module\n");
     unregister_chrdev(my_major, MY_DEVICE);
     list_t *currentSeekNodePtr;
     struct MinorsListNode *currentSeekNode;
@@ -88,6 +88,7 @@ void cleanup_module(void)
 int my_open(struct inode *inode, struct file *filp) // TODO - is the filp initialized? 
 {
     // handle open
+    printk("Starting my_open\n");
     struct MinorsListNode *minorsListNodePtr = GetMinorListNodePtr(filp);
     if (minorsListNodePtr == NULL)
     {
@@ -112,6 +113,7 @@ int my_open(struct inode *inode, struct file *filp) // TODO - is the filp initia
 int my_release(struct inode *inode, struct file *filp)
 {
     // handle file closing
+    printk("Starting my_release\n");
     return 0; // TODO - should we return 0?
 }
 
@@ -120,6 +122,7 @@ ssize_t my_write(struct file *filp, const char *buf, size_t count, loff_t *f_pos
     //
     // Do write operation.
     // Return number of bytes written.
+    printk("Starting my_write\n");
     struct MinorsListNode *minorsListNodePtr = GetMinorListNodePtr(filp);
     if (minorsListNodePtr == NULL)
     {
@@ -134,6 +137,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
     //
     // Do read operation.
     // Return number of bytes read.
+    printk("Starting my_read\n");
     if(buf == NULL)
     {
         return -EFAULT;
@@ -147,7 +151,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
     int copyToUserReturnValue = 0;
     unsigned int totalLengthCopied = 0;
     unsigned int currentLengthCopied = 0;
-    unsigned int modPosition = (int)(*f_pos) % strlen(minorsListNodePtr->string);
+    unsigned int modPosition = (unsigned long)(*f_pos) % strlen(minorsListNodePtr->string);
     // read the string in a loop until we reach the end of the string or the end of the buffer
     while(*f_pos < minorsListNodePtr->maxSize)
     {
@@ -160,7 +164,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
         
         totalLengthCopied += currentLengthCopied;
         *f_pos += currentLengthCopied;
-        modPosition = (int)(*f_pos) % strlen(minorsListNodePtr->string);
+        modPosition = (unsigned long)(*f_pos) % strlen(minorsListNodePtr->string);
     }
     
     return totalLengthCopied; 
@@ -171,6 +175,7 @@ loff_t my_llseek(struct file *filp, loff_t a, int num) // TODO - what is the a a
     //
     // Do lseek operation.
     // Return new position.
+    printk("Starting my_llseek\n");
     struct MinorsListNode *minorsListNodePtr = GetMinorListNodePtr(filp);
     if(minorsListNodePtr == NULL)
     {
