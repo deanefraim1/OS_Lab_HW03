@@ -154,14 +154,18 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
     {
         return -EFAULT;
     }
-    int finished = 0;
     unsigned int totalLengthCopied = 0;
     unsigned int currentLengthCopied = 0;
     unsigned int modPosition = (unsigned long)(*f_pos) % stringLength;
-    while(*f_pos < Min(minorsListNodePtr->maxSize,count))
+    int copyToUserReturnValue = 0;
+    while((*f_pos < minorsListNodePtr->maxSize) && (totalLengthCopied < count))
     {
         currentLengthCopied = Min(stringLength - modPosition, count - totalLengthCopied);
-        copy_to_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
+        copyToUserReturnValue = copy_to_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
+        if (copyToUserReturnValue != 0)
+        {
+            return -EBADF;
+        }
         totalLengthCopied += currentLengthCopied;
         *f_pos += currentLengthCopied;
         modPosition = (unsigned long)(*f_pos) % stringLength;
