@@ -209,9 +209,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     switch(cmd)
     {
         case SET_STRING:
-        printk("before strlen_user\n");
         stringLength = strlen_user((char *)arg);
-        printk("after strlen_user with string length = %lf\n", stringLength);
         if (stringLength == 0)
         {
             return -EINVAL; // TODO - is this the correct error?
