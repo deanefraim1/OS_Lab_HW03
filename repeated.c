@@ -229,6 +229,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
 
 struct MinorsListNode *GetMinorListNodePtr(struct file *filp)
 {
+    printk("Starting GetMinorListNodePtr\n");
     if(filp->private_data == NULL)
     {
         return NULL;
