@@ -201,21 +201,22 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     switch(cmd)
     {
         case SET_STRING:
-            long stringLength = strlen_user((char*)arg);
-            if(stringLength == 0)
-            {
-                return -EINVAL; // TODO - is this the correct error?
+        long stringLength;
+        stringLength = strlen_user((char*)arg);
+        if (stringLength == 0)
+        {
+            return -EINVAL; // TODO - is this the correct error?
             }
             copy_from_user(minorsListNodePtr->string, (char*)arg, stringLength); // TODO - how does it know the string?
         break;
 
         case RESET:
-            minorsListNodePtr->maxSize = 0;
-            minorsListNodePtr->string = NULL;
+        minorsListNodePtr->maxSize = 0;
+        minorsListNodePtr->string = NULL;
         break;
 
         default:
-            return -ENOTTY; // TODO - is this the correct error?
+        return -ENOTTY; // TODO - is this the correct error?
     }
 
     return 0;
