@@ -198,6 +198,7 @@ loff_t my_llseek(struct file *filp, loff_t a, int num) // TODO - what is the a a
 
 int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg)
 {
+    printk("Starting my_ioctl\n");
     struct MinorsListNode *minorsListNodePtr = GetMinorListNodePtr(filp);
     long stringLength;
     if(minorsListNodePtr == NULL)
@@ -225,6 +226,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
         return -ENOTTY; // TODO - is this the correct error?
     }
 
+    printk("Finished my_ioctl\n");
     return 0;
 }
 
@@ -244,5 +246,6 @@ struct MinorsListNode *GetMinorListNodePtr(struct file *filp)
         if(currentSeekNode->minorNumber == minorNumber)
             return currentSeekNode;
     }
+    printk("Finished GetMinorListNodePtr\n");
     return NULL;
 }
