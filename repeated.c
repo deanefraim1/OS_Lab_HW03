@@ -193,6 +193,7 @@ loff_t my_llseek(struct file *filp, loff_t a, int num) // TODO - what is the a a
 int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg)
 {
     struct MinorsListNode *minorsListNodePtr = GetMinorListNodePtr(filp);
+    long stringLength;
     if(minorsListNodePtr == NULL)
     {
         return -EBADF; // TODO - is this the correct error?
@@ -201,7 +202,6 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     switch(cmd)
     {
         case SET_STRING:
-        long stringLength;
         stringLength = strlen_user((char*)arg);
         if (stringLength == 0)
         {
