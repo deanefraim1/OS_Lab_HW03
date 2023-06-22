@@ -11,7 +11,11 @@ int my_open(struct inode *, struct file *);
 
 int my_release(struct inode *, struct file *);
 
+ssize_t my_write(struct file *filp, const char *buf, size_t count, loff_t *f_pos);
+
 ssize_t my_read(struct file *, char *, size_t, loff_t *);
+
+loff_t my_llseek(struct file *filp, loff_t a, int num);
 
 int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg);
 
