@@ -154,7 +154,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
     unsigned int currentLengthCopied = 0;
     unsigned int modPosition = (unsigned long)(*f_pos) % strlen(minorsListNodePtr->string);
     // read the string in a loop until we reach the end of the string or the end of the buffer
-    while(*f_pos < minorsListNodePtr->maxSize)
+    while(*f_pos < minorsListNodePtr->maxSize && *f_pos < count)
     {
         currentLengthCopied = ((strlen(minorsListNodePtr->string) - modPosition) < (count - totalLengthCopied)) ? (strlen(minorsListNodePtr->string) - modPosition) : (count - totalLengthCopied);
         copyToUserReturnValue = copy_to_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
@@ -214,10 +214,8 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
         {
             return -EINVAL; // TODO - is this the correct error?
         }
-        printk("before copy_from_user\n");
         minorsListNodePtr->string = kmalloc(stringLength, GFP_KERNEL);
         copy_from_user(minorsListNodePtr->string, (char*)arg, stringLength); // TODO - how does it know the string?
-        printk("after copy_from_user\n");
         break;
 
         case RESET:
