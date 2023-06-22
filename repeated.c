@@ -209,12 +209,16 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     switch(cmd)
     {
         case SET_STRING:
-        stringLength = strlen_user((char*)arg);
+        printk("before strlen_user\n");
+        stringLength = strlen_user((char *)arg);
+        printk("after strlen_user with string length = %lf\n", stringLength);
         if (stringLength == 0)
         {
             return -EINVAL; // TODO - is this the correct error?
-            }
-            copy_from_user(minorsListNodePtr->string, (char*)arg, stringLength); // TODO - how does it know the string?
+        }
+        printk("before copy_from_user\n");
+        copy_from_user(minorsListNodePtr->string, (char*)arg, stringLength); // TODO - how does it know the string?
+        printk("after copy_from_user\n");
         break;
 
         case RESET:
@@ -244,8 +248,11 @@ struct MinorsListNode *GetMinorListNodePtr(struct file *filp)
     {
         currentSeekNode = list_entry(currentSeekNodePtr, struct MinorsListNode, ptr);
         if(currentSeekNode->minorNumber == minorNumber)
+        {
+            printk("Finished GetMinorListNodePtr and found minor\n");
             return currentSeekNode;
+        }
     }
-    printk("Finished GetMinorListNodePtr\n");
+    printk("Finished GetMinorListNodePtr and couldn't find minor\n");
     return NULL;
 }
