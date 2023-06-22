@@ -143,6 +143,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
     {
         return -EFAULT;
     }
+
     struct MinorsListNode *minorsListNodePtr = GetMinorListNodePtr(filp);
     if (minorsListNodePtr == NULL)
     {
@@ -172,27 +173,6 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
     }
 
     return totalLengthCopied;
-
-    /*int copyToUserReturnValue = 0;
-    
-    unsigned int currentLengthCopied = 0;
-    
-    // read the string in a loop until we reach the end of the string or the end of the buffer
-    while (*f_pos < minorsListNodePtr->maxSize && *f_pos < count)
-    {
-        currentLengthCopied = ((strlen(minorsListNodePtr->string) - modPosition) < (count - totalLengthCopied)) ? (strlen(minorsListNodePtr->string) - modPosition) : (count - totalLengthCopied);
-        copyToUserReturnValue = copy_to_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
-        if (copyToUserReturnValue != 0)
-        {
-            return -EBADF;
-        }
-
-        totalLengthCopied += currentLengthCopied;
-        *f_pos += currentLengthCopied;
-        modPosition = (unsigned long)(*f_pos) % strlen(minorsListNodePtr->string);
-    }
-
-    return totalLengthCopied;*/
 }
 
 loff_t my_llseek(struct file *filp, loff_t a, int num) // TODO - what is the a and num?
