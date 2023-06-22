@@ -106,6 +106,7 @@ int my_open(struct inode *inode, struct file *filp) // TODO - is the filp initia
         filp->f_pos = 0;
     }
 
+    printk("Finished my_open\n");
     return 0;
 }
 
