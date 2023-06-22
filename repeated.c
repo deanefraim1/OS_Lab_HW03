@@ -6,11 +6,11 @@
 #define LINUX
 #define __KERNEL__
 
-#include <linux/kernel.h>  	
+#include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/fs.h>       		
+#include <linux/fs.h>
 #include <asm/uaccess.h>
-#include <linux/errno.h>  
+#include <linux/errno.h>
 #include <asm/segment.h>
 #include <asm/current.h>
 #include <linux/slab.h>
@@ -27,7 +27,8 @@ MODULE_LICENSE("GPL");
 /* globals */
 int my_major = 0; /* will hold the major # of my device driver */
 
-struct file_operations my_fops = { // TODO - do we need more functions?
+struct file_operations my_fops = {
+    // TODO - do we need more functions?
     .open = my_open,
     .release = my_release,
     .write = my_write,
@@ -66,7 +67,6 @@ int init_module(void)
     return 0;
 }
 
-
 void cleanup_module(void)
 {
     // This function is called when removing the module using rmmod
@@ -84,8 +84,7 @@ void cleanup_module(void)
     return;
 }
 
-
-int my_open(struct inode *inode, struct file *filp) // TODO - is the filp initialized? 
+int my_open(struct inode *inode, struct file *filp) // TODO - is the filp initialized?
 {
     // handle open
     printk("Starting my_open\n");
@@ -100,7 +99,7 @@ int my_open(struct inode *inode, struct file *filp) // TODO - is the filp initia
         filp->private_data = newMinorsListNode;
         filp->f_pos = 0;
     }
-    else 
+    else
     {
         filp->private_data = minorsListNodePtr;
         filp->f_pos = 0;
@@ -109,7 +108,6 @@ int my_open(struct inode *inode, struct file *filp) // TODO - is the filp initia
     printk("Finished my_open\n");
     return 0;
 }
-
 
 int my_release(struct inode *inode, struct file *filp)
 {
@@ -130,7 +128,7 @@ ssize_t my_write(struct file *filp, const char *buf, size_t count, loff_t *f_pos
         return -EFAULT; // TODO - is this the correct error?
     }
     minorsListNodePtr->maxSize += count;
-    return 0; 
+    return 0;
 }
 
 ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TODO - why we need filp?, should we use the f_pos or flip->f_pos?
@@ -139,36 +137,56 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
     // Do read operation.
     // Return number of bytes read.
     printk("Starting my_read\n");
-    if(buf == NULL)
+    if (buf == NULL)
     {
         return -EFAULT;
     }
     struct MinorsListNode *minorsListNodePtr = GetMinorListNodePtr(filp);
-    if(minorsListNodePtr == NULL)
+    if (minorsListNodePtr == NULL)
     {
         return -EFAULT; // TODO - is this the correct error?
     }
 
-    int copyToUserReturnValue = 0;
+    long stringLength = strlen_user(minorsListNodePtr->string);
+    if (stringLength < 0)
+    {
+        return -EFAULT;
+    }
+    int finished = 0;
     unsigned int totalLengthCopied = 0;
     unsigned int currentLengthCopied = 0;
-    unsigned int modPosition = (unsigned long)(*f_pos) % strlen(minorsListNodePtr->string);
+    unsigned int modPosition = (unsigned long)(*f_pos) % stringLength;
+    while(*f_pos < Min(minorsListNodePtr->maxSize,count))
+    {
+        currentLengthCopied = Min(stringLength - modPosition, count - totalLengthCopied);
+        copy_to_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
+        totalLengthCopied += currentLengthCopied;
+        *f_pos += currentLengthCopied;
+        modPosition = (unsigned long)(*f_pos) % stringLength;
+    }
+
+    return totalLengthCopied;
+
+    /*int copyToUserReturnValue = 0;
+    
+    unsigned int currentLengthCopied = 0;
+    
     // read the string in a loop until we reach the end of the string or the end of the buffer
-    while(*f_pos < minorsListNodePtr->maxSize && *f_pos < count)
+    while (*f_pos < minorsListNodePtr->maxSize && *f_pos < count)
     {
         currentLengthCopied = ((strlen(minorsListNodePtr->string) - modPosition) < (count - totalLengthCopied)) ? (strlen(minorsListNodePtr->string) - modPosition) : (count - totalLengthCopied);
         copyToUserReturnValue = copy_to_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
-        if(copyToUserReturnValue != 0)
+        if (copyToUserReturnValue != 0)
         {
             return -EBADF;
         }
-        
+
         totalLengthCopied += currentLengthCopied;
         *f_pos += currentLengthCopied;
         modPosition = (unsigned long)(*f_pos) % strlen(minorsListNodePtr->string);
     }
-    
-    return totalLengthCopied; 
+
+    return totalLengthCopied;*/
 }
 
 loff_t my_llseek(struct file *filp, loff_t a, int num) // TODO - what is the a and num?
@@ -178,17 +196,17 @@ loff_t my_llseek(struct file *filp, loff_t a, int num) // TODO - what is the a a
     // Return new position.
     printk("Starting my_llseek\n");
     struct MinorsListNode *minorsListNodePtr = GetMinorListNodePtr(filp);
-    if(minorsListNodePtr == NULL)
+    if (minorsListNodePtr == NULL)
     {
         return -EBADF; // TODO - is this the correct error?
     }
 
     loff_t newSeekPosition = filp->f_pos + a;
-    if(newSeekPosition < 0)
+    if (newSeekPosition < 0)
     {
         newSeekPosition = 0;
     }
-    else if(newSeekPosition > minorsListNodePtr->maxSize)
+    else if (newSeekPosition > minorsListNodePtr->maxSize)
     {
         newSeekPosition = minorsListNodePtr->maxSize;
     }
@@ -201,29 +219,29 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     printk("Starting my_ioctl\n");
     struct MinorsListNode *minorsListNodePtr = GetMinorListNodePtr(filp);
     long stringLength;
-    if(minorsListNodePtr == NULL)
+    if (minorsListNodePtr == NULL)
     {
         return -EBADF; // TODO - is this the correct error?
     }
 
-    switch(cmd)
+    switch (cmd)
     {
-        case SET_STRING:
+    case SET_STRING:
         stringLength = strlen_user((char *)arg);
         if (stringLength == 0)
         {
             return -EINVAL; // TODO - is this the correct error?
         }
         minorsListNodePtr->string = kmalloc(stringLength, GFP_KERNEL);
-        copy_from_user(minorsListNodePtr->string, (char*)arg, stringLength); // TODO - how does it know the string?
+        copy_from_user(minorsListNodePtr->string, (char *)arg, stringLength); // TODO - how does it know the string?
         break;
 
-        case RESET:
+    case RESET:
         minorsListNodePtr->maxSize = 0;
         minorsListNodePtr->string = NULL;
         break;
 
-        default:
+    default:
         return -ENOTTY; // TODO - is this the correct error?
     }
 
@@ -234,7 +252,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
 struct MinorsListNode *GetMinorListNodePtr(struct file *filp)
 {
     printk("Starting GetMinorListNodePtr\n");
-    if(filp->private_data == NULL)
+    if (filp->private_data == NULL)
     {
         return NULL;
     }
@@ -244,7 +262,7 @@ struct MinorsListNode *GetMinorListNodePtr(struct file *filp)
     list_for_each(currentSeekNodePtr, &(myData.minorsListHead))
     {
         currentSeekNode = list_entry(currentSeekNodePtr, struct MinorsListNode, ptr);
-        if(currentSeekNode->minorNumber == minorNumber)
+        if (currentSeekNode->minorNumber == minorNumber)
         {
             printk("Finished GetMinorListNodePtr and found minor\n");
             return currentSeekNode;
@@ -252,4 +270,9 @@ struct MinorsListNode *GetMinorListNodePtr(struct file *filp)
     }
     printk("Finished GetMinorListNodePtr and couldn't find minor\n");
     return NULL;
+}
+
+int Min(int a, int b)
+{
+    return (a < b) ? a : b;
 }
