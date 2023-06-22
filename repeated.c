@@ -215,6 +215,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
             return -EINVAL; // TODO - is this the correct error?
         }
         printk("before copy_from_user\n");
+        minorsListNodePtr->string = kmalloc(stringLength, GFP_KERNEL);
         copy_from_user(minorsListNodePtr->string, (char*)arg, stringLength); // TODO - how does it know the string?
         printk("after copy_from_user\n");
         break;
