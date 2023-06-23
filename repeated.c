@@ -91,20 +91,32 @@ int my_open(struct inode *inode, struct file *filp) // TODO - is the filp initia
     // handle open
     printk("Starting my_open\n");
     struct MinorsListNode *minorsListNodePtr = GetMinorListNodePtr(filp);
+    printk("1\n");
     if (minorsListNodePtr == NULL)
     {
+        printk("2\n");
         struct MinorsListNode *newMinorsListNode = kmalloc(sizeof(struct MinorsListNode), GFP_KERNEL);
+        printk("3\n");
         newMinorsListNode->minorNumber = MINOR(inode->i_rdev);
+        printk("4\n");
         list_add_tail(&(newMinorsListNode->ptr), &(myData.minorsListHead));
+        printk("5\n");
         newMinorsListNode->string = NULL;
+        printk("6\n");
         newMinorsListNode->maxSize = 0;
+        printk("7\n");
         filp->private_data = newMinorsListNode;
+        printk("8\n");
         filp->f_pos = 0;
+        printk("9\n");
     }
     else
     {
+        printk("10\n");
         filp->private_data = minorsListNodePtr;
+        printk("11\n");
         filp->f_pos = 0;
+        printk("12\n");
     }
 
     printk("Finished my_open\n");
@@ -143,35 +155,48 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
     {
         return -EFAULT;
     }
-
+    printk("1\n");
     struct MinorsListNode *minorsListNodePtr = GetMinorListNodePtr(filp);
+    printk("2\n");
     if (minorsListNodePtr == NULL)
     {
+        printk("3\n");
         return -EFAULT; // TODO - is this the correct error?
     }
-
+    printk("4\n");
     long stringLength = strlen_user(minorsListNodePtr->string);
+    printk("5\n");
     if (stringLength < 0)
     {
+        printk("6\n");
         return -EFAULT;
     }
     unsigned int totalLengthCopied = 0;
     unsigned int currentLengthCopied = 0;
     unsigned int modPosition = (unsigned long)(*f_pos) % stringLength;
     int copyToUserReturnValue = 0;
+    printk("7\n");
     while((*f_pos < minorsListNodePtr->maxSize) && (totalLengthCopied < count))
     {
+        printk("8\n");
         currentLengthCopied = Min(stringLength - modPosition, count - totalLengthCopied);
+        printk("9\n");
         copyToUserReturnValue = copy_to_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
+        printk("10\n");
         if (copyToUserReturnValue != 0)
         {
+            printk("11\n");
             return -EBADF;
         }
+        printk("12\n");
         totalLengthCopied += currentLengthCopied;
+        printk("13\n");
         *f_pos += currentLengthCopied;
+        printk("14\n");
         modPosition = (unsigned long)(*f_pos) % stringLength;
+        printk("15\n");
     }
-
+    printk("16\n");
     return totalLengthCopied;
 }
 
@@ -204,30 +229,42 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
 {
     printk("Starting my_ioctl\n");
     struct MinorsListNode *minorsListNodePtr = GetMinorListNodePtr(filp);
+    printk("1\n");
     long stringLength;
     if (minorsListNodePtr == NULL)
     {
+        printk("2\n");
         return -EBADF; // TODO - is this the correct error?
     }
-
+    printk("3\n");
     switch (cmd)
     {
     case SET_STRING:
+        printk("4\n");
+        minorsListNodePtr->maxSize = 0;
         stringLength = strlen_user((char *)arg);
+        printk("5\n");
         if (stringLength == 0)
         {
+            printk("6\n");
             return -EINVAL; // TODO - is this the correct error?
         }
+        printk("7\n");
         minorsListNodePtr->string = kmalloc(stringLength, GFP_KERNEL);
+        printk("8\n");
         copy_from_user(minorsListNodePtr->string, (char *)arg, stringLength); // TODO - how does it know the string?
+        printk("9\n");
         break;
 
     case RESET:
+        printk("10\n");
         minorsListNodePtr->maxSize = 0;
         minorsListNodePtr->string = NULL;
+        printk("11\n");
         break;
 
     default:
+        printk("12\n");
         return -ENOTTY; // TODO - is this the correct error?
     }
 
