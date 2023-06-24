@@ -243,7 +243,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     case SET_STRING:
         printk("4\n");
         minorsListNodePtr->maxSize = 0;
-        stringLength = strlen_user((char *)arg) - 1;
+        stringLength = strlen_user((char *)arg);
         printk("stringLength = %ld\n", stringLength);
         printk("5\n");
         if (stringLength == 0)
@@ -252,7 +252,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
             return -EINVAL; // TODO - is this the correct error?
         }
         printk("7\n");
-        minorsListNodePtr->string = kmalloc(stringLength, GFP_KERNEL);
+        minorsListNodePtr->string = kmalloc(stringLength * sizeof(char), GFP_KERNEL);
         printk("8\n");
         int copyFromUserReturnValue = strncpy_from_user(minorsListNodePtr->string, (char *)arg, stringLength); // TODO - how does it know the string?
         stringLength = strlen(minorsListNodePtr->string);
@@ -269,6 +269,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     case RESET:
         printk("10\n");
         minorsListNodePtr->maxSize = 0;
+        kfree(minorsListNodePtr->string);
         minorsListNodePtr->string = NULL;
         printk("11\n");
         break;
