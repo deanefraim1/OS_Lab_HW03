@@ -164,7 +164,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
         return -EFAULT; // TODO - is this the correct error?
     }
     printk("4\n");
-    long stringLength = strlen(minorsListNodePtr->string) - 1;
+    long stringLength = strlen(minorsListNodePtr->string);
     printk("5\n");
     printk("stringLength = %ld\n", stringLength);
     if (stringLength < 0)
