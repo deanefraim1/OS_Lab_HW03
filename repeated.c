@@ -255,10 +255,10 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
         minorsListNodePtr->string = kmalloc(stringLength * sizeof(char), GFP_KERNEL);
         printk("8\n");
         int copyFromUserReturnValue = strncpy_from_user(minorsListNodePtr->string, (char *)arg, stringLength * sizeof(char)); // TODO - how does it know the string?
-        stringLength = strlen(minorsListNodePtr->string);
+        stringLength = strlen_user(minorsListNodePtr->string);
         printk("stringLength = %ld\n", stringLength);
         printk("string is %s\n", minorsListNodePtr->string);
-        if(copyFromUserReturnValue != 0)
+        if(copyFromUserReturnValue != (stringLength * sizeof(char) - 1))
         {
             printk("8.5\n");
             return -EFAULT;
