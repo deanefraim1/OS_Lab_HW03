@@ -244,6 +244,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
         printk("4\n");
         minorsListNodePtr->maxSize = 0;
         stringLength = strlen_user((char *)arg);
+        printk("stringLength = %ld\n", stringLength);
         printk("5\n");
         if (stringLength == 0)
         {
@@ -253,7 +254,12 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
         printk("7\n");
         minorsListNodePtr->string = kmalloc(stringLength, GFP_KERNEL);
         printk("8\n");
-        copy_from_user(minorsListNodePtr->string, (char *)arg, stringLength); // TODO - how does it know the string?
+        int copyFromUserReturnValue = copy_from_user(minorsListNodePtr->string, (char *)arg, stringLength); // TODO - how does it know the string?
+        if(copyFromUserReturnValue != 0)
+        {
+            printk("8.5\n");
+            return -EFAULT;
+        }
         printk("9\n");
         break;
 
