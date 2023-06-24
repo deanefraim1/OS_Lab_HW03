@@ -182,7 +182,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
         printk("8\n");
         currentLengthCopied = Min(stringLength - modPosition, count - totalLengthCopied);
         printk("9\n");
-        copyToUserReturnValue = strncpy_from_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
+        copyToUserReturnValue = copy_to_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
         printk("10\n");
         if (copyToUserReturnValue != 0)
         {
