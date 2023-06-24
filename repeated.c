@@ -164,7 +164,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
         return -EFAULT; // TODO - is this the correct error?
     }
     printk("4\n");
-    long stringLength = strlen_user(minorsListNodePtr->string);
+    long stringLength = strlen_user(minorsListNodePtr->string) - 1;
     printk("5\n");
     printk("stringLength = %ld\n", stringLength);
     if (stringLength < 0)
@@ -182,7 +182,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
         printk("8\n");
         currentLengthCopied = Min(stringLength - modPosition, count - totalLengthCopied);
         printk("9\n");
-        copyToUserReturnValue = copy_to_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
+        copyToUserReturnValue = strncpy_from_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
         printk("10\n");
         if (copyToUserReturnValue != 0)
         {
@@ -243,7 +243,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     case SET_STRING:
         printk("4\n");
         minorsListNodePtr->maxSize = 0;
-        stringLength = strlen_user((char *)arg);
+        stringLength = strlen_user((char *)arg) - 1;
         printk("stringLength = %ld\n", stringLength);
         printk("5\n");
         if (stringLength == 0)
