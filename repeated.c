@@ -171,6 +171,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
         printk("6\n");
         return -EFAULT;
     }
+    printk("stringLength = %ld\n", stringLength);
     unsigned int totalLengthCopied = 0;
     unsigned int currentLengthCopied = 0;
     unsigned int modPosition = (unsigned long)(*f_pos) % stringLength;
