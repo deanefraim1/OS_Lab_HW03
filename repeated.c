@@ -211,7 +211,10 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     switch (cmd)
     {
     case SET_STRING:
-        minorsListNodePtr->maxSize = 0;
+        if(minorsListNodePtr->string != NULL)
+        {
+            kfree(minorsListNodePtr->string);
+        }
         stringLength = strlen_user((char *)arg); // including the null terminator
         if (stringLength == 0)
         {
