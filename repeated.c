@@ -52,7 +52,7 @@ struct MinorsListNode
 
 struct MinorsListNode *GetMinorListNodePtr(struct file *filp);
 
-int Min(int a, int b);
+int Min(int a, int b, int c);
 
 int init_module(void)
 {
@@ -160,7 +160,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
         printk("round = %d\n", round);
         printk("modPosition = %d, totalLengthCopied = %d\n", modPosition, totalLengthCopied);
         printk("stringLength - modPosition = %d, count - totalLengthCopied = %d\n", stringLength - modPosition, count - totalLengthCopied);
-        currentLengthCopied = Min(stringLength - modPosition, count - totalLengthCopied);
+        currentLengthCopied = Min(stringLength - modPosition, count - totalLengthCopied, *f_pos - minorsListNodePtr->maxSize);
         printk("currentLengthCopied = %d\n", currentLengthCopied);
         copyToUserReturnValue = copy_to_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
         printk("buf is %s\n", buf);
@@ -262,7 +262,18 @@ struct MinorsListNode *GetMinorListNodePtr(struct file *filp)
     return NULL;
 }
 
-int Min(int a, int b)
+int Min(int a, int b, int c)
 {
-    return (a < b) ? a : b;
+    if (a <= b && a <= c)
+    {
+        return a;
+    }
+    else if (b <= a && b <= c)
+    {
+        return b;
+    }
+    else
+    {
+        return c;
+    }
 }
