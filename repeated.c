@@ -145,6 +145,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
     long stringLength = strlen(minorsListNodePtr->string);
     printk("stringLength = %ld\n", stringLength);
     printk("string is %s\n", minorsListNodePtr->string);
+    printk("count = %ld\n", count);
     if (stringLength < 0)
     {
         return -EFAULT;
@@ -158,6 +159,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
     {
         printk("round = %d\n", round);
         printk("modPosition = %d, totalLengthCopied = %d\n", modPosition, totalLengthCopied);
+        printk("stringLength - modPosition = %d, count - totalLengthCopied = %d\n", stringLength - modPosition, count - totalLengthCopied);
         currentLengthCopied = Min(stringLength - modPosition, count - totalLengthCopied);
         printk("currentLengthCopied = %d\n", currentLengthCopied);
         copyToUserReturnValue = copy_to_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
@@ -169,6 +171,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
         totalLengthCopied += currentLengthCopied;
         *f_pos += currentLengthCopied;
         modPosition = (unsigned long)(*f_pos) % stringLength;
+        round++;
     }
     return totalLengthCopied;
 }
