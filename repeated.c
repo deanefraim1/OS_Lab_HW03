@@ -159,8 +159,8 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
     {
         printk("round = %d\n", round);
         printk("modPosition = %d, totalLengthCopied = %d\n", modPosition, totalLengthCopied);
-        printk("stringLength - modPosition = %d, count - totalLengthCopied = %d, *f_pos - minorsListNodePtr->maxSize = %d\n", stringLength - modPosition, count - totalLengthCopied, *f_pos - minorsListNodePtr->maxSize);
-        currentLengthCopied = Min(stringLength - modPosition, count - totalLengthCopied, *f_pos - minorsListNodePtr->maxSize);
+        printk("stringLength - modPosition = %d, count - totalLengthCopied = %d, *f_pos - minorsListNodePtr->maxSize = %d\n", stringLength - modPosition, count - totalLengthCopied, minorsListNodePtr->maxSize - *f_pos);
+        currentLengthCopied = Min(stringLength - modPosition, count - totalLengthCopied, minorsListNodePtr->maxSize - *f_pos);
         printk("currentLengthCopied = %d\n", currentLengthCopied);
         copyToUserReturnValue = copy_to_user(buf + totalLengthCopied, minorsListNodePtr->string + modPosition, currentLengthCopied);
         printk("buf is %s\n", buf);
