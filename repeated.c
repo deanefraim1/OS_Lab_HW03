@@ -243,7 +243,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     case SET_STRING:
         printk("4\n");
         minorsListNodePtr->maxSize = 0;
-        stringLength = strlen_user((char *)arg);
+        stringLength = strlen_user((char *)arg) - 1;
         printk("stringLength = %ld\n", stringLength);
         printk("5\n");
         if (stringLength == 0)
