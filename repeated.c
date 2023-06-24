@@ -164,7 +164,7 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
         return -EFAULT; // TODO - is this the correct error?
     }
     printk("4\n");
-    long stringLength = strlen_user(minorsListNodePtr->string) - 1;
+    long stringLength = strlen(minorsListNodePtr->string) - 1;
     printk("5\n");
     printk("stringLength = %ld\n", stringLength);
     if (stringLength < 0)
@@ -243,7 +243,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
     case SET_STRING:
         printk("4\n");
         minorsListNodePtr->maxSize = 0;
-        stringLength = strlen_user((char *)arg);
+        stringLength = strlen_user((char *)arg); // including the null terminator
         printk("stringLength = %ld\n", stringLength);
         printk("5\n");
         if (stringLength == 0)
@@ -254,9 +254,9 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
         printk("7\n");
         minorsListNodePtr->string = kmalloc(stringLength * sizeof(char), GFP_KERNEL);
         printk("8\n");
-        int copyFromUserReturnValue = strncpy_from_user(minorsListNodePtr->string, (char *)arg, stringLength); // TODO - how does it know the string?
+        int copyFromUserReturnValue = strncpy_from_user(minorsListNodePtr->string, (char *)arg, stringLength); // returns the number of bytes that were not copied not including the null terminator
         printk("copyFromUserReturnValue = %d\n", copyFromUserReturnValue);
-        stringLength = strlen_user(minorsListNodePtr->string);
+        stringLength = strlen(minorsListNodePtr->string); // including the null terminator
         printk("stringLength = %ld\n", stringLength);
         printk("string is %s\n", minorsListNodePtr->string);
         if(copyFromUserReturnValue != (stringLength - 1))
