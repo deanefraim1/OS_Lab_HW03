@@ -259,7 +259,7 @@ int my_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned 
         stringLength = strlen(minorsListNodePtr->string); // including the null terminator
         printk("stringLength = %ld\n", stringLength);
         printk("string is %s\n", minorsListNodePtr->string);
-        if(copyFromUserReturnValue != (stringLength - 1))
+        if(copyFromUserReturnValue != stringLength)
         {
             printk("8.5\n");
             return -EFAULT;
