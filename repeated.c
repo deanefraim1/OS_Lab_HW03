@@ -173,7 +173,6 @@ ssize_t my_read(struct file *filp, char *buf, size_t count, loff_t *f_pos) // TO
         modPosition = (unsigned long)(*f_pos) % stringLength;
         round++;
     }
-    filp->f_pos = *f_pos;
     return totalLengthCopied;
 }
 
